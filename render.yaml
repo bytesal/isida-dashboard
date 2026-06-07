@@ -15,5 +15,5 @@ services:
         sync: false
       - key: REDIRECT_URI
         value: https://your-dashboard.onrender.com/auth/callback
-      - key: ADMIN_USER_IDS
-        sync: false
+      - key: SECRET_KEY
+        generateValue: true
