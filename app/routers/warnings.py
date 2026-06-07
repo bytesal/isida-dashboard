@@ -11,18 +11,15 @@ async def get_warnings(guild_id: int, request: Request):
     user_token = request.session.get("access_token")
     if not user_token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    # Fetch warnings from database
+
     warnings_cursor = db.database.warnings.find({"guild_id": guild_id})
     warnings = await warnings_cursor.to_list(length=200)
-    
+
     if not warnings:
         return []
-    
-    # Collect unique moderator IDs
+
+    # Fetch moderator usernames
     mod_ids = list(set(w["moderator_id"] for w in warnings))
-    
-    # Fetch usernames from Discord API using bot token
     async with httpx.AsyncClient() as client:
         mod_names = {}
         for uid in mod_ids:
@@ -38,8 +35,7 @@ async def get_warnings(guild_id: int, request: Request):
                     mod_names[uid] = f"Unknown ({uid})"
             except:
                 mod_names[uid] = f"Unknown ({uid})"
-    
-    # Format warnings
+
     result = []
     for w in warnings:
         result.append({
@@ -51,5 +47,4 @@ async def get_warnings(guild_id: int, request: Request):
             "reason": w["reason"],
             "timestamp": w["timestamp"].isoformat() if hasattr(w["timestamp"], "isoformat") else w["timestamp"]
         })
-    
     return result
