@@ -2,46 +2,225 @@
 <html>
 <head>
     <title>iSida Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #1e1f22; color: white; }
-        .container { max-width: 1200px; margin: auto; }
-        .card { background: #2b2d31; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        h1 { color: #5865f2; }
-        .guild-list { display: flex; flex-wrap: wrap; gap: 20px; }
-        .guild-item { background: #2b2d31; padding: 15px; border-radius: 8px; width: 200px; text-align: center; }
-        .guild-item img { border-radius: 50%; width: 64px; height: 64px; }
-        a { color: #5865f2; text-decoration: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #1e1f22;
+            color: #dbdee1;
+            line-height: 1.5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2b2d31;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #5865f2, #8ea1e1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #2b2d31;
+            padding: 8px 16px;
+            border-radius: 40px;
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+        .logout-btn {
+            background: #da373c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover {
+            background: #a1282c;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .guild-card {
+            background: #2b2d31;
+            border-radius: 16px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+        .guild-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            background: #32353b;
+        }
+        .guild-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 16px;
+            object-fit: cover;
+            background: #1e1f22;
+        }
+        .guild-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+        .guild-owner {
+            font-size: 12px;
+            color: #faa81a;
+            margin-bottom: 16px;
+        }
+        .view-btn {
+            background: #5865f2;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .view-btn:hover {
+            background: #4752c4;
+        }
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #b5bac1;
+        }
+        .error {
+            text-align: center;
+            padding: 60px;
+            color: #f23f42;
+        }
+        .footer {
+            margin-top: 48px;
+            text-align: center;
+            font-size: 12px;
+            color: #5c5f66;
+            border-top: 1px solid #2b2d31;
+            padding-top: 20px;
+        }
+        @media (max-width: 640px) {
+            body { padding: 16px; }
+            .grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>iSida Dashboard</h1>
-        <div class="card">
-            <h2>Welcome, {{ user.username }}#{{ user.discriminator or '0' }}</h2>
-            <p>Select a server to manage:</p>
+        <div class="header">
+            <h1>iSida Dashboard</h1>
+            <div class="user-info" id="userInfo">
+                <img id="userAvatar" class="user-avatar" src="" alt="avatar">
+                <span id="userName"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
         </div>
-        <div class="guild-list" id="guilds">
-            Loading...
+
+        <div id="guildsContainer" class="loading">Loading your servers...</div>
+        <div class="footer">
+            iSida Moderation Bot | Servers where iSida is present and you have Admin/Owner permissions
         </div>
     </div>
+
     <script>
-        fetch('/guilds/')
-            .then(res => res.json())
-            .then(data => {
-                const container = document.getElementById('guilds');
-                if (data.length === 0) {
-                    container.innerHTML = '<p>No servers found. Make sure the bot is in your servers.</p>';
-                    return;
+        async function fetchGuilds() {
+            try {
+                const response = await fetch('/guilds/');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/auth/login';
+                        return;
+                    }
+                    throw new Error('Failed to fetch guilds');
                 }
-                container.innerHTML = data.map(g => `
-                    <div class="guild-item">
-                        <img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                        <h3>${g.name}</h3>
-                        <a href="/warnings/${g.id}">View Warnings</a><br>
-                        <a href="/logs/${g.id}">View Mod Logs</a>
-                    </div>
-                `).join('');
-            });
+                const guilds = await response.json();
+                renderGuilds(guilds);
+            } catch (error) {
+                console.error(error);
+                document.getElementById('guildsContainer').innerHTML = '<div class="error">Failed to load servers. Please <a href="/auth/login" style="color:#5865f2;">login again</a>.</div>';
+            }
+        }
+
+        function renderGuilds(guilds) {
+            const container = document.getElementById('guildsContainer');
+            if (!guilds || guilds.length === 0) {
+                container.innerHTML = '<div class="error">No servers found. Make sure iSida bot is in your servers and you have administrator/owner permissions.</div>';
+                return;
+            }
+            container.innerHTML = `
+                <div class="grid">
+                    ${guilds.map(guild => `
+                        <div class="guild-card">
+                            <img class="guild-icon" src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            <div class="guild-name">${escapeHtml(guild.name)}</div>
+                            ${guild.owner ? '<div class="guild-owner">👑 Owner</div>' : '<div class="guild-owner" style="color:#5865f2;">🛡️ Admin</div>'}
+                            <a href="/warnings/${guild.id}" class="view-btn">View Warnings</a>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function loadUserInfo() {
+            try {
+                const resp = await fetch('/auth/me');
+                if (resp.ok) {
+                    const user = await resp.json();
+                    document.getElementById('userName').innerText = `${user.username}#${user.discriminator || '0'}`;
+                    const avatarUrl = user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png`;
+                    document.getElementById('userAvatar').src = avatarUrl;
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function logout() {
+            fetch('/auth/logout').then(() => window.location.href = '/');
+        }
+
+        loadUserInfo();
+        fetchGuilds();
     </script>
 </body>
 </html>
