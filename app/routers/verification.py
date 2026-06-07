@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException
 from app.database import db
-from bson import ObjectId
 
 router = APIRouter()
 
