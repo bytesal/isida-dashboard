@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -13,11 +13,8 @@ load_dotenv()
 
 app = FastAPI(title="iSida Dashboard")
 
-# Session middleware (required for request.session)
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=os.getenv("SECRET_KEY", "fallback-secret-key-change-this")
-)
+# Session middleware
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "fallback-secret-key-change-this"))
 
 # MongoDB connection
 @app.on_event("startup")
@@ -37,12 +34,7 @@ async def shutdown_db_client():
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
-# Include routers
-app.include_router(auth.router, prefix="/auth", tags=["auth"])
-app.include_router(guilds.router, prefix="/guilds", tags=["guilds"])
-app.include_router(warnings.router, prefix="/warnings", tags=["warnings"])
-app.include_router(logs.router, prefix="/logs", tags=["logs"])
-
+# ========== HTML PAGE ROUTES (must be declared before API routers) ==========
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
     user = request.session.get("user")
@@ -51,7 +43,7 @@ async def root(request: Request):
     return RedirectResponse(url="/dashboard")
 
 @app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard(request: Request):
+async def dashboard_page(request: Request):
     user = request.session.get("user")
     if not user:
         return RedirectResponse(url="/auth/login")
@@ -63,3 +55,16 @@ async def warnings_page(request: Request, guild_id: int):
     if not user:
         return RedirectResponse(url="/auth/login")
     return templates.TemplateResponse("warnings.html", {"request": request, "guild_id": guild_id})
+
+@app.get("/logs/{guild_id}", response_class=HTMLResponse)
+async def logs_page(request: Request, guild_id: int):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/auth/login")
+    return templates.TemplateResponse("logs.html", {"request": request, "guild_id": guild_id})
+
+# ========== API ROUTES (prefixed with /api) ==========
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(guilds.router, prefix="/api/guilds", tags=["guilds"])
+app.include_router(warnings.router, prefix="/api/warnings", tags=["warnings"])
+app.include_router(logs.router, prefix="/api/logs", tags=["logs"])
