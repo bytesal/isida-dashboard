@@ -13,18 +13,25 @@ load_dotenv()
 
 app = FastAPI(title="iSida Dashboard")
 
-# Add session middleware (required for request.session)
-app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "your-secret-key-change-this"))
+# Session middleware (required for request.session)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SECRET_KEY", "fallback-secret-key-change-this")
+)
 
 # MongoDB connection
 @app.on_event("startup")
 async def startup_db_client():
-    db.client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv("MONGO_URI"))
+    mongo_uri = os.getenv("MONGO_URI")
+    if not mongo_uri:
+        raise ValueError("MONGO_URI not set")
+    db.client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
     db.database = db.client["iSidaDB"]
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    db.client.close()
+    if db.client:
+        db.client.close()
 
 # Static files and templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -41,7 +48,7 @@ async def root(request: Request):
     user = request.session.get("user")
     if not user:
         return RedirectResponse(url="/auth/login")
-    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
+    return RedirectResponse(url="/dashboard")
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
@@ -49,3 +56,10 @@ async def dashboard(request: Request):
     if not user:
         return RedirectResponse(url="/auth/login")
     return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
+
+@app.get("/warnings/{guild_id}", response_class=HTMLResponse)
+async def warnings_page(request: Request, guild_id: int):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/auth/login")
+    return templates.TemplateResponse("warnings.html", {"request": request, "guild_id": guild_id})
