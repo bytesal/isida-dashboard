@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iSida Dashboard - Verification Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1e1f22; color: #dbdee1; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #2b2d31; }
+        .header h1 span { color: #5865f2; }
+        .back-btn { background: #2b2d31; color: #dbdee1; padding: 8px 16px; border-radius: 8px; text-decoration: none; }
+        .back-btn:hover { background: #3b3f48; }
+        .guild-card { background: #2b2d31; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
+        .guild-icon { width: 48px; height: 48px; border-radius: 50%; }
+        .guild-name { font-size: 18px; font-weight: 600; }
+        .settings-form { background: #2b2d31; border-radius: 12px; padding: 24px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; color: #b5bac1; }
+        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #3b3f48; background: #1e1f22; color: white; }
+        button { background: #5865f2; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        button:hover { background: #4752c4; }
+        .status { margin-top: 20px; padding: 12px; border-radius: 8px; background: #1e1f22; }
+        .success { color: #57f287; }
+        .error { color: #f23f42; }
+        .loading { text-align: center; padding: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span>iSida</span> Dashboard</h1>
+            <a href="/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+        </div>
+        <div id="guildInfo" class="guild-card"></div>
+        <div class="settings-form">
+            <h2>Verification Settings</h2>
+            <div class="form-group">
+                <label><i class="fas fa-hashtag"></i> Verification Channel</label>
+                <select id="channelSelect"></select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-tag"></i> Role to Assign</label>
+                <select id="roleSelect"></select>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-smile"></i> Emoji (default: ✅)</label>
+                <input type="text" id="emojiInput" placeholder="✅" maxlength="2">
+            </div>
+            <button id="saveBtn"><i class="fas fa-save"></i> Save Settings</button>
+            <button id="createMsgBtn" style="margin-left: 10px; background: #23a55a;"><i class="fas fa-envelope"></i> Create Verification Message</button>
+            <div id="statusMsg" class="status"></div>
+        </div>
+    </div>
+    <script>
+        const pathParts = window.location.pathname.split('/');
+        const guildId = pathParts[pathParts.length - 1];
+
+        async function fetchGuild() {
+            const resp = await fetch('/api/guilds/');
+            const guilds = await resp.json();
+            return guilds.find(g => g.id == guildId);
+        }
+
+        async function fetchChannels() {
+            const resp = await fetch(`/api/discord/guilds/${guildId}/channels`);
+            const channels = await resp.json();
+            return channels.filter(c => c.type === 0); // text channels
+        }
+
+        async function fetchRoles() {
+            const resp = await fetch(`/api/discord/guilds/${guildId}/roles`);
+            return await resp.json();
+        }
+
+        async function fetchSettings() {
+            const resp = await fetch(`/api/verification/${guildId}`);
+            return await resp.json();
+        }
+
+        async function saveSettings() {
+            const channelId = document.getElementById('channelSelect').value;
+            const roleId = document.getElementById('roleSelect').value;
+            const emoji = document.getElementById('emojiInput').value;
+            const payload = {};
+            if (channelId) payload.channel_id = parseInt(channelId);
+            if (roleId) payload.role_id = parseInt(roleId);
+            if (emoji) payload.emoji = emoji;
+            const resp = await fetch(`/api/verification/${guildId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (resp.ok) {
+                document.getElementById('statusMsg').innerHTML = '<span class="success">✅ Settings saved!</span>';
+                setTimeout(() => document.getElementById('statusMsg').innerHTML = '', 3000);
+            } else {
+                document.getElementById('statusMsg').innerHTML = '<span class="error">❌ Failed to save settings</span>';
+            }
+        }
+
+        async function createVerificationMessage() {
+            const resp = await fetch(`/api/verification/${guildId}/create`, { method: 'POST' });
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('statusMsg').innerHTML = '<span class="success">✅ Verification message created!</span>';
+            } else {
+                document.getElementById('statusMsg').innerHTML = '<span class="error">❌ ' + data.error + '</span>';
+            }
+        }
+
+        async function loadPage() {
+            const guild = await fetchGuild();
+            if (!guild) return;
+            document.getElementById('guildInfo').innerHTML = `
+                <img class="guild-icon" src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                <div class="guild-name">${guild.name}</div>
+            `;
+            const [channels, roles, settings] = await Promise.all([fetchChannels(), fetchRoles(), fetchSettings()]);
+            const channelSelect = document.getElementById('channelSelect');
+            channelSelect.innerHTML = '<option value="">-- Select channel --</option>' + channels.map(c => `<option value="${c.id}" ${settings.channel_id == c.id ? 'selected' : ''}>#${c.name}</option>`).join('');
+            const roleSelect = document.getElementById('roleSelect');
+            roleSelect.innerHTML = '<option value="">-- No role --</option>' + roles.map(r => `<option value="${r.id}" ${settings.role_id == r.id ? 'selected' : ''}>@${r.name}</option>`).join('');
+            document.getElementById('emojiInput').value = settings.emoji || '✅';
+            document.getElementById('saveBtn').onclick = saveSettings;
+            document.getElementById('createMsgBtn').onclick = createVerificationMessage;
+        }
+
+        loadPage();
+    </script>
+</body>
+</html>
