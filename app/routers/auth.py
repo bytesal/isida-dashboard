@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import RedirectResponse
 import os
 import httpx
@@ -38,7 +38,7 @@ async def callback(code: str, request: Request):
         if user.get("id") and int(user["id"]) not in ADMIN_USERS:
             return {"error": "You are not authorized to access this dashboard."}
         
-        # Store user session (simplified; use proper session store in production)
+        # Store user session
         request.session["user"] = user
         request.session["access_token"] = access_token
-        return RedirectResponse(url="/")
+        return RedirectResponse(url="/dashboard")
