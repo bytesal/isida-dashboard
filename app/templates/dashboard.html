@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>iSida Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #1e1f22; color: white; }
+        .container { max-width: 1200px; margin: auto; }
+        .card { background: #2b2d31; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        h1 { color: #5865f2; }
+        .guild-list { display: flex; flex-wrap: wrap; gap: 20px; }
+        .guild-item { background: #2b2d31; padding: 15px; border-radius: 8px; width: 200px; text-align: center; }
+        .guild-item img { border-radius: 50%; width: 64px; height: 64px; }
+        a { color: #5865f2; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>iSida Dashboard</h1>
+        <div class="card">
+            <h2>Welcome, {{ user.username }}#{{ user.discriminator or '0' }}</h2>
+            <p>Select a server to manage:</p>
+        </div>
+        <div class="guild-list" id="guilds">
+            Loading...
+        </div>
+    </div>
+    <script>
+        fetch('/guilds/')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('guilds');
+                if (data.length === 0) {
+                    container.innerHTML = '<p>No servers found. Make sure the bot is in your servers.</p>';
+                    return;
+                }
+                container.innerHTML = data.map(g => `
+                    <div class="guild-item">
+                        <img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                        <h3>${g.name}</h3>
+                        <a href="/warnings/${g.id}">View Warnings</a><br>
+                        <a href="/logs/${g.id}">View Mod Logs</a>
+                    </div>
+                `).join('');
+            });
+    </script>
+</body>
+</html>
