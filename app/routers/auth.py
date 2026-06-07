@@ -32,9 +32,13 @@ async def callback(code: str, request: Request):
         access_token = token_json.get("access_token")
         
         # Fetch user info
-        user_resp = await client.get("https://discord.com/api/users/@me", headers={"Authorization": f"Bearer {access_token}"})
+        user_resp = await client.get(
+            "https://discord.com/api/users/@me",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
         user = user_resp.json()
         
+        # Check authorization
         if user.get("id") and int(user["id"]) not in ADMIN_USERS:
             return {"error": "You are not authorized to access this dashboard."}
         
@@ -42,3 +46,17 @@ async def callback(code: str, request: Request):
         request.session["user"] = user
         request.session["access_token"] = access_token
         return RedirectResponse(url="/dashboard")
+
+@router.get("/me")
+async def get_current_user(request: Request):
+    """Return the currently logged-in user's Discord info."""
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+@router.post("/logout")
+async def logout(request: Request):
+    """Clear the user's session."""
+    request.session.clear()
+    return {"status": "ok"}
