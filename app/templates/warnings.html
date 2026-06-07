@@ -1,194 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>iSida Dashboard - Warnings</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iSida Dashboard - Warnings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #1e1f22;
-            color: #dbdee1;
-            line-height: 1.5;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #2b2d31;
-        }
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #ffffff;
-        }
-        .header h1 span {
-            color: #5865f2;
-        }
-        .back-btn {
-            background: #2b2d31;
-            color: #dbdee1;
-            padding: 8px 16px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 14px;
-            transition: background 0.2s;
-        }
-        .back-btn:hover {
-            background: #3b3f48;
-        }
-        .guild-info {
-            background: #2b2d31;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .guild-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: #1e1f22;
-            object-fit: cover;
-        }
-        .guild-name {
-            font-size: 20px;
-            font-weight: 600;
-            color: #ffffff;
-        }
-        .stats {
-            margin-left: auto;
-            background: #1e1f22;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-        .table-container {
-            background: #2b2d31;
-            border-radius: 12px;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th {
-            text-align: left;
-            padding: 16px;
-            background: #1e1f22;
-            font-weight: 600;
-            color: #b5bac1;
-            border-bottom: 1px solid #3b3f48;
-        }
-        td {
-            padding: 14px 16px;
-            border-bottom: 1px solid #3b3f48;
-            vertical-align: top;
-        }
-        tr:hover {
-            background: #32353b;
-        }
-        .warning-id {
-            font-family: monospace;
-            font-size: 12px;
-            color: #b5bac1;
-        }
-        .moderator {
-            color: #5865f2;
-        }
-        .reason {
-            max-width: 400px;
-            word-break: break-word;
-        }
-        .timestamp {
-            font-size: 12px;
-            color: #b5bac1;
-            white-space: nowrap;
-        }
-        .no-data {
-            text-align: center;
-            padding: 48px;
-            color: #b5bac1;
-        }
-        .footer {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 12px;
-            color: #5c5f66;
-        }
-        @media (max-width: 768px) {
-            th, td {
-                padding: 10px 12px;
-            }
-            .reason {
-                max-width: 200px;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1e1f22; color: #dbdee1; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #2b2d31; flex-wrap: wrap; gap: 16px; }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .header h1 span { color: #5865f2; }
+        .back-btn { background: #2b2d31; color: #dbdee1; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; transition: background 0.2s; }
+        .back-btn:hover { background: #3b3f48; }
+        .guild-info { background: #2b2d31; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .guild-icon { width: 64px; height: 64px; border-radius: 50%; background: #1e1f22; object-fit: cover; }
+        .guild-name { font-size: 20px; font-weight: 600; color: #ffffff; }
+        .stats { margin-left: auto; background: #1e1f22; padding: 8px 16px; border-radius: 20px; font-size: 14px; }
+        .table-container { background: #2b2d31; border-radius: 12px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 16px; background: #1e1f22; font-weight: 600; color: #b5bac1; border-bottom: 1px solid #3b3f48; }
+        td { padding: 14px 16px; border-bottom: 1px solid #3b3f48; vertical-align: top; }
+        tr:hover { background: #32353b; }
+        .warning-id { font-family: monospace; font-size: 12px; color: #b5bac1; }
+        .moderator { color: #5865f2; }
+        .reason { max-width: 400px; word-break: break-word; }
+        .timestamp { font-size: 12px; color: #b5bac1; white-space: nowrap; }
+        .no-data { text-align: center; padding: 48px; color: #b5bac1; }
+        .footer { margin-top: 24px; text-align: center; font-size: 12px; color: #5c5f66; }
+        @media (max-width: 768px) { th, td { padding: 10px 12px; } .reason { max-width: 200px; } }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1><span>iSida</span> Dashboard</h1>
-            <a href="/dashboard" class="back-btn">← Back to Servers</a>
-        </div>
-
-        <div class="guild-info" id="guildInfo">
-            <img id="guildIcon" class="guild-icon" src="" alt="Server icon">
-            <div>
-                <div class="guild-name" id="guildName">Loading...</div>
-                <div class="guild-id" id="guildId" style="font-size:12px;color:#b5bac1;"></div>
-            </div>
-            <div class="stats" id="warningCount">0 warnings</div>
-        </div>
-
-        <div class="table-container">
-            <table id="warningsTable">
-                <thead>
-                    <tr>
-                        <th>Warning ID</th>
-                        <th>Moderator</th>
-                        <th>Reason</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody id="warningsBody">
-                    <tr class="no-data"><td colspan="4">Loading warnings...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="footer">
-            iSida Moderation Bot | Warnings are stored permanently in the database
-        </div>
+        <div class="header"><h1><span>iSida</span> Dashboard</h1><a href="/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Servers</a></div>
+        <div class="guild-info" id="guildInfo"><img id="guildIcon" class="guild-icon"><div><div class="guild-name" id="guildName">Loading...</div><div class="guild-id" id="guildId" style="font-size:12px;color:#b5bac1;"></div></div><div class="stats" id="warningCount">0 warnings</div></div>
+        <div class="table-container"><table><thead><tr><th>Warning ID</th><th>Moderator</th><th>Reason</th><th>Date</th></tr></thead><tbody id="warningsBody"><tr class="no-data"><td colspan="4">Loading warnings...</td></tr></tbody></table></div>
+        <div class="footer">iSida Moderation Bot | Warnings are stored permanently in the database</div>
     </div>
-
     <script>
-        // Extract guild ID from URL path
         const pathParts = window.location.pathname.split('/');
         const guildId = pathParts[pathParts.length - 1];
-
         async function fetchWarnings() {
             try {
-                const response = await fetch(`/warnings/${guildId}`);
-                if (!response.ok) throw new Error('Failed to fetch');
+                const response = await fetch(`/api/warnings/${guildId}`);
+                if (!response.ok) throw new Error();
                 const warnings = await response.json();
-                
-                // Update guild info
-                const guildInfo = await fetch('/guilds/').then(res => res.json());
+                const guildInfo = await fetch('/api/guilds/').then(res => res.json());
                 const guild = guildInfo.find(g => g.id === guildId);
                 if (guild) {
                     document.getElementById('guildName').innerText = guild.name;
@@ -197,45 +57,13 @@
                     document.getElementById('guildIcon').src = iconUrl;
                     document.getElementById('warningCount').innerText = `${warnings.length} warning${warnings.length !== 1 ? 's' : ''}`;
                 }
-                
-                // Populate table
                 const tbody = document.getElementById('warningsBody');
-                if (warnings.length === 0) {
-                    tbody.innerHTML = '<tr class="no-data"><td colspan="4">No warnings found for this server.</td></tr>';
-                    return;
-                }
-                
-                tbody.innerHTML = warnings.map(w => `
-                    <tr>
-                        <td class="warning-id">${w._id}</td>
-                        <td class="moderator">${w.moderator_name || w.moderator_id}</td>
-                        <td class="reason">${escapeHtml(w.reason)}</td>
-                        <td class="timestamp">${formatDate(w.timestamp)}</td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                console.error(error);
-                document.getElementById('warningsBody').innerHTML = '<tr class="no-data"><td colspan="4">Error loading warnings. Make sure you are logged in.</td></tr>';
-            }
+                if (warnings.length === 0) { tbody.innerHTML = '<tr class="no-data"><td colspan="4">No warnings found for this server.</td></tr>'; return; }
+                tbody.innerHTML = warnings.map(w => `<tr><td class="warning-id">${w._id}</td><td class="moderator">${escapeHtml(w.moderator_name)}</td><td class="reason">${escapeHtml(w.reason)}</td><td class="timestamp">${formatDate(w.timestamp)}</td></tr>`).join('');
+            } catch(error) { document.getElementById('warningsBody').innerHTML = '<tr class="no-data"><td colspan="4">Error loading warnings. Make sure you are logged in.</td></tr>'; }
         }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function formatDate(isoString) {
-            const date = new Date(isoString);
-            return date.toLocaleString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-        
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        function formatDate(isoString) { const date = new Date(isoString); return date.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
         fetchWarnings();
     </script>
 </body>
