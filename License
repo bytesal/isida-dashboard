@@ -1,0 +1,16 @@
+
+---
+
+## Additional Step: Update Bot Logger to Store Logs in MongoDB
+
+In your bot's `utils/logger.py`, add this line inside `log_to_mod_channel` after sending to Discord:
+
+```python
+await db.database.mod_logs.insert_one({
+    "guild_id": guild.id,
+    "action": action,
+    "moderator_id": moderator.id,
+    "target_id": target.id if target else None,
+    "reason": details,
+    "timestamp": datetime.utcnow()
+})
