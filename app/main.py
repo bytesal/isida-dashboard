@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
 from dotenv import load_dotenv
 import os
 import motor.motor_asyncio
@@ -11,6 +12,9 @@ from .routers import auth, guilds, warnings, logs
 load_dotenv()
 
 app = FastAPI(title="iSida Dashboard")
+
+# Add session middleware (required for request.session)
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "your-secret-key-change-this"))
 
 # MongoDB connection
 @app.on_event("startup")
@@ -34,4 +38,14 @@ app.include_router(logs.router, prefix="/logs", tags=["logs"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/auth/login")
+    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/auth/login")
+    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
