@@ -9,7 +9,6 @@ router = APIRouter()
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
-ADMIN_USERS = [int(x.strip()) for x in os.getenv("ADMIN_USER_IDS", "").split(",") if x.strip()]
 
 @router.get("/login")
 async def login():
@@ -38,10 +37,7 @@ async def callback(code: str, request: Request):
         )
         user = user_resp.json()
         
-        # Check authorization
-        if user.get("id") and int(user["id"]) not in ADMIN_USERS:
-            return {"error": "You are not authorized to access this dashboard."}
-        
+        # No global whitelist check - allow any Discord user
         # Store user session
         request.session["user"] = user
         request.session["access_token"] = access_token
