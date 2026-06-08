@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iSida Dashboard - Ticket Transcripts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #1e1f22; color: #dbdee1; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .header h1 span { color: #5865f2; }
+        .back-btn { background: #2b2d31; color: #dbdee1; padding: 8px 16px; border-radius: 8px; text-decoration: none; }
+        .guild-card { background: #2b2d31; border-radius: 12px; padding: 16px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; }
+        .guild-icon { width: 48px; height: 48px; border-radius: 50%; }
+        .guild-name { font-size: 18px; font-weight: 600; }
+        .transcript-list { background: #2b2d31; border-radius: 12px; overflow: hidden; }
+        .transcript-item { padding: 16px; border-bottom: 1px solid #3b3f48; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .transcript-item:hover { background: #32353b; }
+        .transcript-title { font-weight: 600; color: white; }
+        .transcript-meta { font-size: 12px; color: #b5bac1; }
+        .view-btn { background: #5865f2; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: #2b2d31; border-radius: 12px; width: 90%; max-width: 800px; max-height: 80%; overflow: auto; padding: 20px; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
+        .close { cursor: pointer; font-size: 24px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; font-size: 12px; background: #1e1f22; padding: 12px; border-radius: 8px; }
+        .no-data { text-align: center; padding: 48px; color: #b5bac1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span>iSida</span> Dashboard</h1>
+            <a href="/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+        </div>
+        <div id="guildInfo" class="guild-card"></div>
+        <div class="transcript-list" id="transcriptList"></div>
+    </div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="modalTitle">Transcript</h3><span class="close" onclick="closeModal()">&times;</span></div>
+            <pre id="modalContent"></pre>
+        </div>
+    </div>
+    <script>
+        const pathParts = window.location.pathname.split('/');
+        const guildId = pathParts[pathParts.length - 1];
+        let currentTranscript = null;
+
+        async function fetchGuild() {
+            const resp = await fetch('/api/guilds/');
+            const guilds = await resp.json();
+            return guilds.find(g => g.id == guildId);
+        }
+
+        async function fetchTranscripts() {
+            const resp = await fetch(`/api/transcripts/${guildId}`);
+            return await resp.json();
+        }
+
+        async function loadPage() {
+            const guild = await fetchGuild();
+            if (guild) {
+                document.getElementById('guildInfo').innerHTML = `
+                    <img class="guild-icon" src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                    <div class="guild-name">${guild.name}</div>
+                `;
+            }
+            const transcripts = await fetchTranscripts();
+            const container = document.getElementById('transcriptList');
+            if (!transcripts.length) {
+                container.innerHTML = '<div class="no-data">No transcripts found. Use `/transcript` in a ticket channel to save one.</div>';
+                return;
+            }
+            container.innerHTML = transcripts.map(t => `
+                <div class="transcript-item">
+                    <div><div class="transcript-title">${escapeHtml(t.ticket_title)}</div><div class="transcript-meta">${t.channel_name} • ${t.message_count} messages • ${new Date(t.created_at).toLocaleString()}</div></div>
+                    <button class="view-btn" onclick="viewTranscript('${t._id}')">View</button>
+                </div>
+            `).join('');
+        }
+
+        async function viewTranscript(id) {
+            const resp = await fetch(`/api/transcripts/detail/${id}`);
+            const data = await resp.json();
+            document.getElementById('modalTitle').innerText = data.ticket_title;
+            document.getElementById('modalContent').innerText = data.content;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        loadPage();
+    </script>
+</body>
+</html>
