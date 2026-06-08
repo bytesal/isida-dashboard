@@ -82,7 +82,7 @@
         }
         .server-card:hover { transform: translateY(-6px); background: #32353b; border-color: rgba(88,101,242,0.4); }
         .server-card:hover::before { transform: scaleX(1); }
-        .server-icon { width: 70px; height: 70px; border-radius: 50%; margin-bottom: 20px; border: 3px solid #5865f2; }
+        .server-icon { width: 70px; height: 70px; border-radius: 50%; margin-bottom: 20px; border: 3px solid #5865f2; object-fit: cover; background: #1e1f22; }
         .server-name { font-size: 20px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .badge { font-size: 11px; padding: 4px 10px; border-radius: 30px; background: #5865f2; color: white; font-weight: 500; }
         .badge.owner { background: #faa81a; color: #1e1f22; }
@@ -108,7 +108,7 @@
                 <div class="dropdown-menu"><a href="#" id="logoutBtn" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
             </div>
         </div>
-        <div class="page-title"><h1>Moderation Hub</h1><p>Manage warnings, logs, and server settings across your servers.</p></div>
+        <div class="page-title"><h1>Moderation Hub</h1><p>Manage warnings, logs, verification, and transcripts across your servers.</p></div>
         <div class="stats-banner" id="statsBanner">
             <div class="stat-card"><i class="fas fa-server stat-icon"></i><div class="stat-info"><h3 id="serverCount">0</h3><p>Available Servers</p></div></div>
             <div class="stat-card"><i class="fas fa-shield-alt stat-icon"></i><div class="stat-info"><h3 id="adminCount">0</h3><p>Admin/Owner Guilds</p></div></div>
@@ -139,7 +139,7 @@
             const cardsHtml = guilds.map(g => {
                 const iconUrl = g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128` : 'https://cdn.discordapp.com/embed/avatars/0.png';
                 const ownerBadge = g.owner ? '<span class="badge owner"><i class="fas fa-crown"></i> Owner</span>' : '<span class="badge"><i class="fas fa-shield-alt"></i> Admin</span>';
-                return `<div class="server-card"><img class="server-icon" src="${iconUrl}" loading="lazy"><div class="server-name">${escapeHtml(g.name)} ${ownerBadge}</div><div class="server-actions"><a href="/warnings/${g.id}" class="btn btn-primary"><i class="fas fa-exclamation-triangle"></i> Warnings</a><a href="/logs/${g.id}" class="btn btn-outline"><i class="fas fa-history"></i> Mod Logs</a><a href="/verification/${g.id}" class="btn btn-outline"><i class="fas fa-check-circle"></i> Verification</a></div></div>`;
+                return `<div class="server-card"><img class="server-icon" src="${iconUrl}" loading="lazy"><div class="server-name">${escapeHtml(g.name)} ${ownerBadge}</div><div class="server-actions"><a href="/warnings/${g.id}" class="btn btn-primary"><i class="fas fa-exclamation-triangle"></i> Warnings</a><a href="/logs/${g.id}" class="btn btn-outline"><i class="fas fa-history"></i> Mod Logs</a><a href="/verification/${g.id}" class="btn btn-outline"><i class="fas fa-check-circle"></i> Verification</a><a href="/transcripts/${g.id}" class="btn btn-outline"><i class="fas fa-file-alt"></i> Transcripts</a></div></div>`;
             }).join('');
             container.innerHTML = `<div class="servers-grid">${cardsHtml}</div>`;
         }
