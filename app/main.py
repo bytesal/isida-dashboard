@@ -7,14 +7,16 @@ from dotenv import load_dotenv
 import os
 import motor.motor_asyncio
 from .database import db
-from .routers import auth, guilds, warnings, logs, verification, discord
+from .routers import auth, guilds, warnings, logs, verification, discord, transcripts
 
 load_dotenv()
 
 app = FastAPI(title="iSida Dashboard")
 
+# Session middleware
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "fallback-secret-key-change-this"))
 
+# MongoDB connection
 @app.on_event("startup")
 async def startup_db_client():
     mongo_uri = os.getenv("MONGO_URI")
@@ -28,6 +30,7 @@ async def shutdown_db_client():
     if db.client:
         db.client.close()
 
+# Static files and templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
@@ -67,6 +70,13 @@ async def verification_page(request: Request, guild_id: int):
         return RedirectResponse(url="/auth/login")
     return templates.TemplateResponse("verification.html", {"request": request, "guild_id": guild_id})
 
+@app.get("/transcripts/{guild_id}", response_class=HTMLResponse)
+async def transcripts_page(request: Request, guild_id: int):
+    user = request.session.get("user")
+    if not user:
+        return RedirectResponse(url="/auth/login")
+    return templates.TemplateResponse("transcripts.html", {"request": request, "guild_id": guild_id})
+
 # ========== API ROUTES ==========
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(guilds.router, prefix="/api/guilds", tags=["guilds"])
@@ -74,3 +84,4 @@ app.include_router(warnings.router, prefix="/api/warnings", tags=["warnings"])
 app.include_router(logs.router, prefix="/api/logs", tags=["logs"])
 app.include_router(verification.router, prefix="/api/verification", tags=["verification"])
 app.include_router(discord.router, prefix="/api/discord", tags=["discord"])
+app.include_router(transcripts.router, prefix="/api/transcripts", tags=["transcripts"])
