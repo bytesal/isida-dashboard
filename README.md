@@ -171,11 +171,7 @@ uvicorn app.main:app --reload
 
 ---
 
-## 📸 Screenshots
 
-> *(Add screenshots of the dashboard, warnings table, logs, verification form, and transcript viewer here)*
-
----
 
 ## 🤝 Contributing
 
@@ -202,7 +198,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](./LICEN
 
 <div align="center">
 
-Made with ❤️ by [bytesal](https://github.com/bytesal)
+Made by [bytesal](https://github.com/bytesal)
 
 [![GitHub](https://img.shields.io/badge/GitHub-bytesal-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/bytesal/isida-dashboard)
 [![Discord](https://img.shields.io/badge/Support-Discord-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.gg/AK4qMNdaWp)
